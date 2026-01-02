@@ -1,0 +1,11 @@
+[project]
+name = "callbell"
+version = "0.1.0"
+description = "A Flask application for sending 'Mom is calling' push notifications with reply capabilities."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "cryptography>=46.0.3",
+    "flask>=3.1.2",
+    "pywebpush>=2.1.2",
+]
