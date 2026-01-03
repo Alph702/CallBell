@@ -39,7 +39,7 @@ def remove_subscription(sub_info):
     if sub_info in subs:
         subs.remove(sub_info)
         with open(SUBSCRIPTIONS_FILE, 'w') as f:
-            json.dump(subs, f)
+            json.dump(subs, f) 
 
 @app.route('/git_update', methods=['POST'])
 def git_update():
