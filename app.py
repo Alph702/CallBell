@@ -45,10 +45,18 @@ def remove_subscription(sub_info):
 def git_update():
     repo = git.Repo()
     origin = repo.remotes.origin
-    repo.create_head('main',
-                     origin.refs.main).set_tracking_branch(origin.refs.main).checkout()
+    
+    # Check if 'main' head exists
+    if 'main' in repo.heads:
+        # Just checkout if not already on it
+        if repo.active_branch.name != 'main':
+            repo.heads.main.checkout()
+    else:
+        # Create it if it doesn't exist
+        repo.create_head('main', origin.refs.main).set_tracking_branch(origin.refs.main).checkout()
+    
     origin.pull()
-    return '', 200
+    return 'Updated successfully', 200
 
 @app.route('/')
 def index():
