@@ -40,6 +40,16 @@ def remove_subscription(sub_info):
         with open(SUBSCRIPTIONS_FILE, 'w') as f:
             json.dump(subs, f)
 
+@app.route('/git_update', methods=['POST'])
+def git_update():
+    # Git Url: https://github.com/Alph702/CallBell.git
+    repo = git.Repo('./CallBell')
+    origin = repo.remotes.origin
+    repo.create_head('main',
+                     origin.refs.main).set_tracking_branch(origin.refs.main).checkout()
+    origin.pull()
+    return '', 200
+
 @app.route('/')
 def index():
     return render_template('index.html', public_key=VAPID_PUBLIC_KEY)
