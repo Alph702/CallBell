@@ -44,6 +44,12 @@ def remove_subscription(sub_info):
 def index():
     return render_template('index.html', public_key=VAPID_PUBLIC_KEY)
 
+@app.route('/sw.js')
+def sw():
+    response = app.send_static_file('sw.js')
+    response.headers['Content-Type'] = 'application/javascript'
+    return response
+
 @app.route('/api/subscribe', methods=['POST'])
 def subscribe():
     subscription_info = request.json
@@ -55,9 +61,32 @@ def subscribe():
 @app.route('/api/call', methods=['POST'])
 def trigger_call():
     subs = get_subscriptions()
+    
+    # Check for audio file
+    audio_url = None
+    print(f"Request files: {request.files}")
+    if 'audio' in request.files:
+        audio_file = request.files['audio']
+        if audio_file.filename != '':
+            # Ensure uploads directory exists
+            uploads_dir = os.path.join('static', 'uploads')
+            os.makedirs(uploads_dir, exist_ok=True)
+            
+            # Save file with timestamp
+            import time
+            filename = f"voice_{int(time.time())}.webm"
+            filepath = os.path.join(uploads_dir, filename)
+            audio_file.save(filepath)
+            audio_url = f"/static/uploads/{filename}"
+
+    body_text = "How long until you come?"
+    if audio_url:
+        body_text = "🎤 Voice message received"
+
     payload = json.dumps({
         "title": "📢 Mom is calling",
-        "body": "How long until you come?",
+        "body": body_text,
+        "audioUrl": audio_url,
         "actions": [
             { "action": "1", "title": "1 min" },
             { "action": "5", "title": "5 min" },

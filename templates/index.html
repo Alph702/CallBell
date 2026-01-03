@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,35 +8,132 @@
     <!-- Simple MVP CSS for nice defaults -->
     <link rel="stylesheet" href="https://unpkg.com/mvp.css">
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; max-width: 600px; margin: 0 auto; }
-        button { font-size: 1.5rem; padding: 15px 30px; margin: 10px; cursor: pointer; border-radius: 10px; border: none; width: 100%; max-width: 300px; }
-        .btn-call { background-color: #ff4757; color: white; font-weight: bold; }
-        .btn-call:active { transform: scale(0.98); }
-        .btn-sub { background-color: #2ed573; color: white; margin-bottom: 20px; }
-        .hidden { display: none; }
-        #status { margin: 20px 0; font-weight: bold; color: #555; }
-        #reply { margin-top: 20px; padding: 20px; border: 2px dashed #ccc; background: #f9f9f9; border-radius: 10px; }
-        #reply h3 { margin-top: 0; }
-        #reply-text { font-size: 1.2rem; color: #333; }
-        
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        button {
+            font-size: 1.5rem;
+            padding: 15px 30px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 10px;
+            border: none;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .btn-call {
+            background-color: #ff4757;
+            color: white;
+            font-weight: bold;
+        }
+
+        .btn-call:active {
+            transform: scale(0.98);
+        }
+
+        .btn-sub {
+            background-color: #2ed573;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .btn-record {
+            background-color: #1e90ff;
+            color: white;
+            font-weight: bold;
+        }
+
+        .btn-record.recording {
+            background-color: #ff0000;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #status {
+            margin: 20px 0;
+            font-weight: bold;
+            color: #555;
+        }
+
+        #reply {
+            margin-top: 20px;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        #reply h3 {
+            margin-top: 0;
+        }
+
+        #reply-text {
+            font-size: 1.2rem;
+            color: #333;
+        }
+
         /* Simple vibration animation */
         @keyframes ring {
-            0% { transform: rotate(0); }
-            10% { transform: rotate(10deg); }
-            30% { transform: rotate(-10deg); }
-            50% { transform: rotate(10deg); }
-            70% { transform: rotate(-10deg); }
-            100% { transform: rotate(0); }
+            0% {
+                transform: rotate(0);
+            }
+
+            10% {
+                transform: rotate(10deg);
+            }
+
+            30% {
+                transform: rotate(-10deg);
+            }
+
+            50% {
+                transform: rotate(10deg);
+            }
+
+            70% {
+                transform: rotate(-10deg);
+            }
+
+            100% {
+                transform: rotate(0);
+            }
         }
-        .ringing { animation: ring 0.5s infinite; }
+
+        .ringing {
+            animation: ring 0.5s infinite;
+        }
     </style>
 </head>
+
 <body>
     <header>
         <h1>🔔 CallBell</h1>
         <p>A simple home notifier</p>
     </header>
-    
+
     <main>
         <!-- Receiver Setup -->
         <section id="setup-section">
@@ -48,11 +146,11 @@
         <!-- Caller Interface -->
         <section id="call-section">
             <button id="call-btn" class="btn-call">🔔 RING BELL</button>
-            <p><small>Click this to call for help</small></p>
+            <p><small>Tap to ring, hold to record voice</small></p>
         </section>
 
         <div id="status"></div>
-        
+
         <div id="reply" class="hidden">
             <h3>💬 Reply Received:</h3>
             <p id="reply-text">Waiting...</p>
@@ -64,4 +162,5 @@
     </script>
     <script src="/static/main.js"></script>
 </body>
+
 </html>
