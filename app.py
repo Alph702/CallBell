@@ -43,8 +43,7 @@ def remove_subscription(sub_info):
 
 @app.route('/git_update', methods=['POST'])
 def git_update():
-    # Git Url: https://github.com/Alph702/CallBell.git
-    repo = git.Repo('./CallBell')
+    repo = git.Repo()
     origin = repo.remotes.origin
     repo.create_head('main',
                      origin.refs.main).set_tracking_branch(origin.refs.main).checkout()
