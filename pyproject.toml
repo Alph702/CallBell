@@ -7,5 +7,6 @@ requires-python = ">=3.13"
 dependencies = [
     "cryptography>=46.0.3",
     "flask>=3.1.2",
+    "gitpython>=3.1.46",
     "pywebpush>=2.1.2",
 ]
