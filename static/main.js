@@ -120,10 +120,88 @@ function sendSubscriptionToBackEnd(subscription) {
     });
 }
 
+// --- Visual State Constants ---
+const circle = document.querySelector('.progress-ring__circle');
+const radius = circle.r.baseVal.value;
+const circumference = radius * 2 * Math.PI;
+const indicators = [
+    document.getElementById('ind-0'),
+    document.getElementById('ind-1'),
+    document.getElementById('ind-2'),
+    document.getElementById('ind-3')
+];
+
+circle.style.strokeDasharray = `${circumference} ${circumference}`;
+circle.style.strokeDashoffset = circumference;
+
+function setProgress(percent) {
+    const offset = circumference - (percent / 100 * circumference);
+    circle.style.strokeDashoffset = offset;
+}
+
+// --- Audio Context for Synthetic Ring ---
+let audioCtx = null;
+function getAudioCtx() {
+    if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+    }
+    return audioCtx;
+}
+
+function playOneRing() {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    const duration = 1.5;
+    const frequencies = [523.25, 783.99, 1046.50, 1569.75];
+    const gains = [0.3, 0.2, 0.1, 0.05];
+
+    frequencies.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = i % 2 === 0 ? 'sine' : 'triangle';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(gains[i], now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + duration);
+    });
+}
+
+let ringingInterval = null;
+let ringingTimeout = null;
+
+function stopRinging() {
+    console.log("DEBUG: Stopping ring.");
+    if (ringingInterval) clearInterval(ringingInterval);
+    if (ringingTimeout) clearTimeout(ringingTimeout);
+    ringingInterval = null;
+    ringingTimeout = null;
+
+    callBtn.classList.remove('ringing');
+    indicators.forEach(ind => ind.classList.remove('active', 'recording'));
+}
+
+function startVisualRinging() {
+    stopRinging(); // Ensure any previous ring is stopped
+
+    callBtn.classList.add('ringing');
+    indicators.forEach(ind => ind.classList.add('active'));
+    playOneRing();
+    ringingInterval = setInterval(playOneRing, 800);
+
+    // Fallback safety timeout
+    ringingTimeout = setTimeout(() => {
+        stopRinging();
+    }, 10000); // 10s fallback
+}
+
 function triggerCall() {
     callBtn.disabled = true;
-    callBtn.textContent = 'Calling...';
-    callBtn.classList.add('ringing');
+    startVisualRinging();
     statusDiv.textContent = 'Sending call...';
 
     fetch('/api/call', {
@@ -133,26 +211,28 @@ function triggerCall() {
         .then(data => {
             console.log("Call result:", data);
             statusDiv.textContent = 'Call Sent! Waiting for reply...';
-            callBtn.classList.remove('ringing');
-            callBtn.textContent = 'Ring Initialized';
+
+            // Stop ringing once sent successfully (or after a small delay to feel good)
+            setTimeout(stopRinging, 500);
 
             // Start polling for reply
             startPolling();
 
-            // Reset button after 5s
+            // Reset button interaction after 5s
             setTimeout(() => {
                 callBtn.disabled = false;
-                callBtn.textContent = '🔔 RING BELL';
             }, 5000);
         })
         .catch(err => {
             statusDiv.textContent = 'Error sending call: ' + err.message;
             callBtn.disabled = false;
-            callBtn.classList.remove('ringing');
+            stopRinging();
         });
 }
 
+let lastProcessedTimestamp = 0;
 let pollInterval;
+
 function startPolling() {
     if (pollInterval) clearInterval(pollInterval);
 
@@ -160,9 +240,11 @@ function startPolling() {
     replyText.textContent = "Waiting for reply...";
 
     let attempts = 0;
+    console.log("DEBUG: Starting poll for reply...");
     pollInterval = setInterval(() => {
         attempts++;
-        if (attempts > 300) { // Stop after 10 mins (300 * 2s)
+        if (attempts > 300) {
+            console.log("DEBUG: Polling timed out.");
             clearInterval(pollInterval);
             statusDiv.textContent = "Timed out waiting for reply.";
             return;
@@ -171,18 +253,33 @@ function startPolling() {
         fetch('/api/poll_reply')
             .then(r => r.json())
             .then(data => {
-                if (data.message) {
+                // Deduplicate using timestamp from backend
+                if (data.message && data.timestamp !== lastProcessedTimestamp) {
+                    console.log("DEBUG: New reply message received:", data.message, "at", data.timestamp);
+                    lastProcessedTimestamp = data.timestamp;
                     clearInterval(pollInterval);
                     handleReply(data.message);
                 }
             })
-            .catch(e => console.log("Poll error", e));
+            .catch(e => console.error("DEBUG: Poll error:", e));
     }, 2000);
 }
 
 function handleReply(message) {
+    console.log("DEBUG: Handling reply:", message);
+    stopRinging(); // Stop any active ringing state
     statusDiv.textContent = "Reply Received!";
+    replyDiv.classList.remove('hidden');
+    replyDiv.style.borderColor = "#ffaa00";
+    replyDiv.style.boxShadow = "0 0 20px rgba(255,170,0,0.3)";
     replyText.textContent = message;
+
+    // Pulse effect
+    replyDiv.animate([
+        { transform: 'scale(1)', opacity: 1 },
+        { transform: 'scale(1.05)', opacity: 0.8 },
+        { transform: 'scale(1)', opacity: 1 }
+    ], { duration: 500, iterations: 2 });
 
     // Check for audio files
     const audioMap = {
@@ -214,14 +311,17 @@ function handleReply(message) {
 let mediaRecorder;
 let audioChunks = [];
 let holdTimer = null;
+let progressInterval = null;
 let isRecording = false;
-let hasSentThisPress = false; // Guard against duplicate sends
-const HOLD_THRESHOLD_MS = 400; // Hold for 400ms to start recording
+let hasSentThisPress = false;
+const HOLD_THRESHOLD_MS = 1200; // Updated to match progress ring feel
 
 // Mouse events
 callBtn.addEventListener('mousedown', handlePressStart);
 callBtn.addEventListener('mouseup', handlePressEnd);
-callBtn.addEventListener('mouseleave', handlePressEnd); // Cancel if mouse leaves
+callBtn.addEventListener('mouseleave', (e) => {
+    if (holdTimer || isRecording) handlePressEnd();
+});
 
 // Touch events for mobile
 callBtn.addEventListener('touchstart', (e) => { e.preventDefault(); handlePressStart(); });
@@ -229,28 +329,53 @@ callBtn.addEventListener('touchend', (e) => { e.preventDefault(); handlePressEnd
 callBtn.addEventListener('touchcancel', handlePressEnd);
 
 function handlePressStart() {
-    // Reset guard for this new press
-    hasSentThisPress = false;
+    if (callBtn.disabled) return;
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
 
-    // Start a timer - if held long enough, begin recording
+    hasSentThisPress = false;
+    callBtn.classList.add('pressed');
+    const startTime = Date.now();
+
+    progressInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min((elapsed / HOLD_THRESHOLD_MS) * 100, 100);
+        setProgress(progress);
+
+        if (progress >= 25) indicators[0].classList.add('active');
+        if (progress >= 50) indicators[1].classList.add('active');
+        if (progress >= 75) indicators[2].classList.add('active');
+
+        if (progress >= 100 && !isRecording) {
+            clearInterval(progressInterval);
+            startRecording();
+        }
+    }, 20);
+
     holdTimer = setTimeout(() => {
-        holdTimer = null; // Clear the timer reference IMMEDIATELY
-        startRecording();
+        holdTimer = null;
     }, HOLD_THRESHOLD_MS);
 }
 
 function handlePressEnd() {
-    // Clear the hold timer if it hasn't fired yet
+    if (!callBtn.classList.contains('pressed')) return;
+    callBtn.classList.remove('pressed');
+
     if (holdTimer) {
         clearTimeout(holdTimer);
         holdTimer = null;
     }
+    if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+    }
 
-    // If we were recording, stop and send the audio
+    setProgress(0);
+    indicators.forEach(ind => ind.classList.remove('active'));
+
     if (isRecording) {
         stopRecording();
     } else if (!hasSentThisPress) {
-        // Quick tap - ring the bell without voice (only if we haven't sent already)
         hasSentThisPress = true;
         triggerCall();
     }
@@ -258,8 +383,11 @@ function handlePressEnd() {
 
 function startRecording() {
     isRecording = true;
-    callBtn.textContent = "🎤 Recording...";
     callBtn.classList.add('recording');
+    indicators.forEach(ind => {
+        ind.classList.remove('active');
+        ind.classList.add('recording');
+    });
     statusDiv.textContent = "Recording... Release to send.";
     audioChunks = [];
 
@@ -287,7 +415,7 @@ function startRecording() {
 
 function stopRecording() {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        hasSentThisPress = true; // Mark as sent before the async stop completes
+        hasSentThisPress = true;
         mediaRecorder.stop();
     }
     isRecording = false;
@@ -295,18 +423,17 @@ function stopRecording() {
 }
 
 function resetButton() {
-    callBtn.classList.remove('recording');
-    callBtn.classList.remove('ringing');
-    callBtn.textContent = "🔔 RING BELL";
-    callBtn.disabled = false;
+    callBtn.classList.remove('recording', 'pressed');
+    indicators.forEach(ind => ind.classList.remove('recording', 'active'));
+    statusDiv.textContent = "";
 }
-
-
 
 function sendAudioMessage(blob) {
     statusDiv.textContent = "Sending voice message...";
     const formData = new FormData();
     formData.append("audio", blob, "recording.webm");
+
+    startVisualRinging(); // Visual ring feedback for voice send too
 
     fetch('/api/call', {
         method: 'POST',
@@ -315,6 +442,7 @@ function sendAudioMessage(blob) {
         .then(r => r.json())
         .then(data => {
             statusDiv.textContent = "Voice message sent! Waiting for reply...";
+            setTimeout(stopRinging, 500);
             startPolling();
         })
         .catch(err => {
@@ -332,7 +460,7 @@ if (playUrl) {
     // Create a prominent play button immediately
     const playBtn = document.createElement('button');
     playBtn.textContent = "▶️ PLAY MESSAGE";
-    playBtn.className = "btn-call";
+    playBtn.className = "btn-sub";
     playBtn.style.backgroundColor = "#2ed573"; // Green
     playBtn.style.marginTop = "20px";
 

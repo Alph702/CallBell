@@ -1,0 +1,248 @@
+:root {
+    --btn-red: #cc0000;
+    --btn-red-dark: #8b0000;
+    --btn-red-light: #ff4d4d;
+    --base-silver: #333;
+}
+
+.button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.button-housing {
+    position: relative;
+    width: clamp(200px, 80vw, 280px);
+    height: clamp(200px, 80vw, 280px);
+    background: linear-gradient(145deg, #444, #222);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 15px 40px rgba(0, 0, 0, 0.8),
+        inset 0 2px 5px rgba(255, 255, 255, 0.1);
+    border: clamp(4px, 2vw, 8px) solid #2a2a2a;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.button-well {
+    position: relative;
+    width: 72%;
+    height: 72%;
+    background: #111;
+    border-radius: 50%;
+    box-shadow: inset 0 10px 20px rgba(0, 0, 0, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* SVG Progress Ring */
+.progress-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.progress-ring__circle {
+    transition: stroke-dashoffset 0.1s linear;
+    stroke: var(--btn-red-light);
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 8px var(--btn-red));
+}
+
+.push-button {
+    position: relative;
+    width: 90%;
+    height: 90%;
+    background: radial-gradient(circle at 30% 30%, var(--btn-red-light), var(--btn-red) 70%);
+    border-radius: 50%;
+    cursor: pointer;
+    outline: none;
+    border: none;
+    user-select: none;
+    transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:
+        0 15px 0 var(--btn-red-dark),
+        0 20px 30px rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transform: translateY(-10px);
+    touch-action: none;
+    -webkit-user-drag: none;
+    z-index: 10;
+}
+
+.push-button::before {
+    content: '';
+    position: absolute;
+    top: 5%;
+    left: 10%;
+    width: 80%;
+    height: 40%;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), transparent);
+    border-radius: 50% / 100% 100% 0 0;
+    pointer-events: none;
+}
+
+.push-button:active,
+.push-button.pressed {
+    transform: translateY(2px);
+    box-shadow:
+        0 3px 0 var(--btn-red-dark),
+        0 5px 10px rgba(0, 0, 0, 0.8);
+}
+
+.content-container {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.button-text {
+    color: white;
+    font-weight: 800;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    position: absolute;
+    opacity: 1;
+}
+
+.icon-wrapper {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.3s ease;
+}
+
+.icon-wrapper svg {
+    width: 100%;
+    height: 100%;
+    fill: white;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* STATE: RINGING */
+.push-button.ringing .button-text {
+    opacity: 0;
+}
+
+.push-button.ringing .icon-bell {
+    opacity: 1;
+    transform: scale(1);
+    animation: bell-shake 2s infinite linear;
+}
+
+/* STATE: RECORDING */
+.push-button.recording .button-text {
+    opacity: 0;
+}
+
+.push-button.recording .icon-mic {
+    opacity: 1;
+    transform: scale(1.1);
+    animation: mic-pulse 1s infinite;
+}
+
+@keyframes bell-shake {
+
+    0%,
+    100% {
+        transform: rotate(0);
+    }
+
+    10%,
+    30%,
+    50% {
+        transform: rotate(15deg);
+    }
+
+    20%,
+    40%,
+    60% {
+        transform: rotate(-15deg);
+    }
+}
+
+@keyframes mic-pulse {
+
+    0%,
+    100% {
+        transform: scale(1.1);
+        filter: drop-shadow(0 0 10px red);
+    }
+
+    50% {
+        transform: scale(1.25);
+        filter: drop-shadow(0 0 25px red);
+    }
+}
+
+.glow {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--btn-red-light);
+    filter: blur(50px);
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: -1;
+}
+
+.push-button:active+.glow,
+.push-button.ringing+.glow,
+.push-button.recording+.glow {
+    opacity: 0.7;
+}
+
+.indicator {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #222;
+    border-radius: 50%;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.indicator.active {
+    background: #ffaa00;
+    box-shadow: 0 0 15px #ffaa00, inset 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.indicator.recording {
+    background: #ff0000;
+    box-shadow: 0 0 15px #ff0000, inset 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 320px) {
+    .button-housing {
+        transform: scale(0.8);
+    }
+}

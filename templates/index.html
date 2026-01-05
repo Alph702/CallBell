@@ -5,155 +5,159 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CallBell</title>
-    <!-- Simple MVP CSS for nice defaults -->
-    <link rel="stylesheet" href="https://unpkg.com/mvp.css">
+    <!-- Premium Tactile Button Styles -->
+    <link rel="stylesheet" href="/static/button.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@800&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: sans-serif;
-            text-align: center;
-            padding: 20px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        button {
-            font-size: 1.5rem;
-            padding: 15px 30px;
-            margin: 10px;
-            cursor: pointer;
-            border-radius: 10px;
-            border: none;
-            width: 100%;
-            max-width: 300px;
-        }
-
-        .btn-call {
-            background-color: #ff4757;
+            background: radial-gradient(circle at center, #2c2c2c 0%, #111 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            margin: 0;
+            padding: 2rem 1rem;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            user-select: none;
             color: white;
-            font-weight: bold;
+            box-sizing: border-box;
         }
 
-        .btn-call:active {
-            transform: scale(0.98);
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2.5rem;
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            background: linear-gradient(to bottom, #fff, #ccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
         }
 
         .btn-sub {
             background-color: #2ed573;
             color: white;
-            margin-bottom: 20px;
-        }
-
-        .btn-record {
-            background-color: #1e90ff;
-            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
             font-weight: bold;
+            transition: transform 0.2s;
         }
 
-        .btn-record.recording {
-            background-color: #ff0000;
-            animation: pulse 1s infinite;
+        .btn-sub:active {
+            transform: scale(0.95);
         }
 
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
+        .btn-sub:disabled {
+            background-color: #444;
+            cursor: default;
+        }
 
-            50% {
-                transform: scale(1.05);
-            }
+        #status {
+            margin-top: 1rem;
+            font-weight: bold;
+            color: #aaa;
+            text-align: center;
+            min-height: 1.5em;
+        }
 
-            100% {
-                transform: scale(1);
-            }
+        #reply {
+            margin-top: 1rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            width: 80%;
         }
 
         .hidden {
             display: none;
         }
 
-        #status {
-            margin: 20px 0;
-            font-weight: bold;
-            color: #555;
-        }
-
-        #reply {
-            margin-top: 20px;
-            padding: 20px;
-            border: 2px dashed #ccc;
-            background: #f9f9f9;
-            border-radius: 10px;
-        }
-
-        #reply h3 {
-            margin-top: 0;
-        }
-
-        #reply-text {
-            font-size: 1.2rem;
-            color: #333;
-        }
-
-        /* Simple vibration animation */
-        @keyframes ring {
-            0% {
-                transform: rotate(0);
-            }
-
-            10% {
-                transform: rotate(10deg);
-            }
-
-            30% {
-                transform: rotate(-10deg);
-            }
-
-            50% {
-                transform: rotate(10deg);
-            }
-
-            70% {
-                transform: rotate(-10deg);
-            }
-
-            100% {
-                transform: rotate(0);
-            }
-        }
-
-        .ringing {
-            animation: ring 0.5s infinite;
+        .btn-call {
+            /* Placeholder for JS reference if needed */
         }
     </style>
 </head>
 
 <body>
-    <header>
-        <h1>🔔 CallBell</h1>
-        <p>A simple home notifier</p>
-    </header>
-
     <main>
+        <header>
+            <h1>🔔 CallBell</h1>
+            <p style="color: #666;">Premium Home Notifier</p>
+        </header>
+
         <!-- Receiver Setup -->
-        <section id="setup-section">
+        <section id="setup-section" style="text-align: center;">
             <button id="enable-btn" class="btn-sub">Enable Notifications</button>
-            <p><small>Click this on the device that receives calls</small></p>
+            <p><small style="color: #444;">Click this on the device that receives calls</small></p>
         </section>
 
-        <hr>
-
         <!-- Caller Interface -->
-        <section id="call-section">
-            <button id="call-btn" class="btn-call">🔔 RING BELL</button>
-            <p><small>Tap to ring, hold to record voice</small></p>
+        <section class="button-container">
+            <div class="button-housing">
+                <div class="indicator" id="ind-0" style="top: 15px; left: 50%; transform: translateX(-50%);"></div>
+                <div class="indicator" id="ind-1" style="right: 15px; top: 50%; transform: translateY(-50%);"></div>
+                <div class="indicator" id="ind-2" style="bottom: 15px; left: 50%; transform: translateX(-50%);"></div>
+                <div class="indicator" id="ind-3" style="left: 15px; top: 50%; transform: translateY(-50%);"></div>
+
+                <div class="button-well">
+                    <svg class="progress-ring" width="200" height="200">
+                        <circle class="progress-ring__circle" stroke-width="6" stroke="transparent" fill="transparent"
+                            r="94" cx="100" cy="100" />
+                    </svg>
+
+                    <button class="push-button" id="call-btn">
+                        <div class="content-container">
+                            <span class="button-text">RING</span>
+
+                            <div class="icon-wrapper icon-bell">
+                                <svg viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+                                </svg>
+                            </div>
+
+                            <div class="icon-wrapper icon-mic">
+                                <svg viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 2.34 9 4v6c0 1.66 1.34 3 3 3z" />
+                                    <path
+                                        d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </button>
+                    <div class="glow"></div>
+                </div>
+            </div>
+            <p><small style="color: #444;">Tap to ring • Hold to record</small></p>
         </section>
 
         <div id="status"></div>
 
         <div id="reply" class="hidden">
-            <h3>💬 Reply Received:</h3>
-            <p id="reply-text">Waiting...</p>
+            <h3 style="margin-top: 0;">💬 Reply Received:</h3>
+            <p id="reply-text" style="font-size: 1.2rem; color: #fff;">Waiting...</p>
         </div>
     </main>
 
