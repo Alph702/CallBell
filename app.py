@@ -135,22 +135,31 @@ def trigger_call():
     
     return jsonify({"results": results})
 
+import time
+
+last_reply_message = None
+last_reply_time = 0
+
 @app.route('/api/reply', methods=['POST'])
 def reply():
-    global last_reply_message
+    global last_reply_message, last_reply_time
     data = request.json
     minutes = data.get('minutes', 'unknown')
     last_reply_message = f"I'll be there in {minutes} minutes."
-    print(f"Received reply: {last_reply_message}")
+    last_reply_time = time.time()
+    print(f"DEBUG: Received reply: {last_reply_message} at {last_reply_time}")
     return jsonify({"status": "received"})
 
 @app.route('/api/poll_reply')
 def poll_reply():
-    global last_reply_message
-    if last_reply_message:
-        msg = last_reply_message
-        last_reply_message = None 
-        return jsonify({"message": msg})
+    global last_reply_message, last_reply_time
+    # Keep message valid for 10 seconds to allow multiple clients/tabs to poll it
+    if last_reply_message and (time.time() - last_reply_time < 10):
+        print(f"DEBUG: Serving reply to poll: {last_reply_message}")
+        return jsonify({
+            "message": last_reply_message,
+            "timestamp": last_reply_time
+        })
     return jsonify({"message": None})
 
 if __name__ == '__main__':
